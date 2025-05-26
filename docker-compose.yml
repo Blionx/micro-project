@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  auth:
+    build: ./services/auth
+
+  products:
+    build: ./services/products
+
+  gateway:
+    build: ./gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - auth
+      - products
