@@ -13,6 +13,7 @@ func NewRouter() http.Handler {
 
 	// Rutas públicas (sin autenticación)
 	r.Post("/auth/login", ProxyToAuth)
+	r.Post("/user/register", ProxyToNewUser)
 
 	// Rutas protegidas con JWT
 	r.Group(func(r chi.Router) {
@@ -24,6 +25,18 @@ func NewRouter() http.Handler {
 	})
 
 	return r
+}
+
+func ProxyToNewUser(w http.ResponseWriter, r *http.Request) {
+	resp, err := http.Post("http://auth:8081/register", "application/json", r.Body)
+
+	if err != nil {
+		http.Error(w, "Error Registering user", http.StatusBadGateway)
+		return
+	}
+	defer resp.Body.Close()
+	w.WriteHeader(resp.StatusCode)
+	io.Copy(w, resp.Body)
 }
 
 func ProxyToAuth(w http.ResponseWriter, r *http.Request) {
