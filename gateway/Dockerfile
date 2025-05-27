@@ -7,7 +7,7 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o gateway main.go router.go middleware.go
+RUN go build -o gateway main.go router.go auth_middleware.go
 
 EXPOSE 8080
 

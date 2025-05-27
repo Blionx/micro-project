@@ -28,7 +28,7 @@ func NewRouter() http.Handler {
 
 func ProxyToAuth(w http.ResponseWriter, r *http.Request) {
 	log.Println("routing request to login.")
-	resp, err := http.Post("http://localhost:8081/login", "application/json", r.Body)
+	resp, err := http.Post("http://auth:8081/login", "application/json", r.Body)
 	if err != nil {
 		http.Error(w, "Auth service error", http.StatusBadGateway)
 		return
@@ -40,7 +40,7 @@ func ProxyToAuth(w http.ResponseWriter, r *http.Request) {
 
 func ProxyToProducts(w http.ResponseWriter, r *http.Request) {
 	// Cambia según tu servicio real
-	req, err := http.NewRequest(r.Method, "http://localhost:8082"+r.URL.Path, r.Body)
+	req, err := http.NewRequest(r.Method, "http://products:8082"+r.URL.Path, r.Body)
 	if err != nil {
 		http.Error(w, "Request error", http.StatusInternalServerError)
 		return
