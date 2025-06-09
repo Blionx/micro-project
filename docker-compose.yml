@@ -52,6 +52,12 @@ services:
     depends_on:
       - auth
       - products
+  roles:
+    build:
+      context: ./services/roles
+    depends_on:
+      - db
+    restart: always
 
 volumes:
   pgdata:

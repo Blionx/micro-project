@@ -28,6 +28,7 @@ func NewRouter() http.Handler {
 	})
 
 	r.Mount("/users", UsersRouter())
+	r.Mount("/roles", RolesRouter())
 
 	return r
 }
@@ -40,6 +41,13 @@ func UsersRouter() http.Handler {
 	r.Post("/", proxyHandler("http://users:8083"))
 	r.Put("/{id}",  proxyHandler("http://users:8083"))
 	r.Delete("/{id}", proxyHandler("http://users:8083"))
+	return r
+}
+
+func RolesRouter() http.Handler {
+	r := chi.NewRouter()
+	r.Get("/", proxyHandler("http://roles:8083"))
+	r.Get("/{id}", proxyHandler("http://roles:8083"))
 	return r
 }
 
