@@ -73,11 +73,6 @@ func main() {
 	}
 	defer db.Close()
 
-	err = initRoles()
-	if err != nil {
-		log.Fatal("Error initializing roles:", err)
-	}
-
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 

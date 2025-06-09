@@ -4,6 +4,9 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/http/httputil"
+    "net/url"
+    "strings"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -24,6 +27,19 @@ func NewRouter() http.Handler {
 		// Puedes agregar más rutas protegidas aquí
 	})
 
+	r.Mount("/users", UsersRouter())
+
+	return r
+}
+
+func UsersRouter() http.Handler {
+	r := chi.NewRouter()
+	r.Get("/", proxyHandler("http://users:8083"))
+	r.Get("/search", proxyHandler("http://users:8083"))
+	r.Get("/{id}", proxyHandler("http://users:8083"))
+	r.Post("/", proxyHandler("http://users:8083"))
+	r.Put("/{id}",  proxyHandler("http://users:8083"))
+	r.Delete("/{id}", proxyHandler("http://users:8083"))
 	return r
 }
 
@@ -71,4 +87,41 @@ func ProxyToProducts(w http.ResponseWriter, r *http.Request) {
 	defer resp.Body.Close()
 	w.WriteHeader(resp.StatusCode)
 	io.Copy(w, resp.Body)
+}
+
+func proxyHandler(targetBase string) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        targetURL, err := url.Parse(targetBase)
+        if err != nil {
+            http.Error(w, "Bad proxy target", http.StatusInternalServerError)
+            return
+        }
+
+        // Crear una nueva solicitud con misma ruta
+        proxy := httputil.NewSingleHostReverseProxy(targetURL)
+
+        // Esto asegura que la ruta original (con {id}, etc.) se respete
+        originalDirector := proxy.Director
+        proxy.Director = func(req *http.Request) {
+            originalDirector(req)
+            req.URL.Path = singleJoiningSlash(targetURL.Path, r.URL.Path)
+            req.URL.RawQuery = r.URL.RawQuery
+            req.Host = targetURL.Host
+        }
+
+        proxy.ServeHTTP(w, r)
+    }
+}
+
+// helper para evitar dobles slashes
+func singleJoiningSlash(a, b string) string {
+    aslash := strings.HasSuffix(a, "/")
+    bslash := strings.HasPrefix(b, "/")
+    switch {
+    case aslash && bslash:
+        return a + b[1:]
+    case !aslash && !bslash:
+        return a + "/" + b
+    }
+    return a + b
 }
